@@ -1,0 +1,52 @@
+
+{
+  "compilerOptions": {
+    /* File Layout */
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* Environment Settings */
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023"],
+    "types": [],
+
+    /* JSX */
+    "jsx": "react-jsx",
+
+    /* Module Settings */
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+
+    /* Output Options */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    /* Type Checking */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    /* Code Quality */
+    "noUncheckedSideEffectImports": true,
+
+    /* Compatibility */
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0"
+  },
+
+  /* Project Files */
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ],
+
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}
