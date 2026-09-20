@@ -1,0 +1,51 @@
+model USER {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(50)
+  email     String   @unique @db.VarChar(50)
+  image     String?  @db.VarChar(255)
+  password  String   @db.Text
+  role      ROLE
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer CUSTOMER?
+  provider PROVIDER?
+
+  @@map("users")
+}
+
+model CUSTOMER {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  address   String?  @db.Text
+  phone     String?  @db.VarChar(20)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    USER     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cart    CART?
+  reviews REVIEW[]
+  orders  ORDER[]
+
+  @@map("customers")
+}
+
+model PROVIDER {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @db.Uuid
+  restaurantName        String   @db.VarChar(100)
+  restaurantDescription String   @db.VarChar(500)
+  restaurantImage       String?  @db.VarChar(255)
+  restaurantAddress     String   @db.Text
+  phone                 String   @db.VarChar(20)
+  isOpen                Boolean  @default(true)
+  food                  FOOD[]
+  orders                ORDER[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user USER @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("providers")
+}

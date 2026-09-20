@@ -1,0 +1,59 @@
+model CART {
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String   @unique @db.Uuid
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer  CUSTOMER    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  cartItems CARTITEMS[]
+
+  @@map("carts")
+}
+
+model CARTITEMS {
+  id              String   @id @default(uuid()) @db.Uuid
+  cartId          String   @db.Uuid
+  foodId          String   @db.Uuid
+  quantity        Int      @db.Integer
+  discountedPrice Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  cart CART @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  food FOOD @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+model ORDER {
+  id          String   @id @default(uuid()) @db.Uuid
+  customerId  String   @db.Uuid
+  providerId  String   @db.Uuid
+  address     String   @db.Text
+  status      String   @db.VarChar(50)
+  totalAmount Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customer   CUSTOMER     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  provider   PROVIDER     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  orderItems ORDERITEMS[]
+  reviews    REVIEW[]
+
+  @@map("orders")
+}
+
+model ORDERITEMS {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @db.Uuid
+  foodId    String   @db.Uuid
+  quantity  Int      @db.Integer
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order ORDER @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  food  FOOD  @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}

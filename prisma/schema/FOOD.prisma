@@ -1,0 +1,42 @@
+model CATEGORY {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  foods FOOD[]
+
+  @@map("category")
+}
+
+model FOOD {
+  id              String   @id @default(uuid()) @db.Uuid
+  foodName        String   @db.VarChar(100)
+  foodDescription String   @db.VarChar(255)
+  categoryId      String   @db.Uuid
+  price           Decimal  @db.Decimal(10, 2)
+  isPopular       Boolean  @default(false)
+  providerId      String   @db.Uuid
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  category   CATEGORY     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  provider   PROVIDER     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  cartItems  CARTITEMS[]
+  orderItems ORDERITEMS[]
+}
+
+model REVIEW {
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String   @db.Uuid
+  orderId    String   @unique @db.Uuid
+  reviewText String   @db.Text
+  rating     Int      @db.Integer
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer CUSTOMER @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order    ORDER    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
