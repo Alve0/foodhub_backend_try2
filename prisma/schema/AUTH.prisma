@@ -1,16 +1,19 @@
-model USER {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @db.VarChar(50)
-  email     String   @unique @db.VarChar(50)
-  image     String?  @db.VarChar(255)
-  password  String   @db.Text
-  role      ROLE
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String    @db.VarChar(50)
+  email               String    @unique @db.VarChar(50)
+  image               String?   @db.VarChar(255)
+  password            String    @db.Text
+  role                ROLE
+  isActive            Boolean?  @default(true)
+  resetTokenHash      String?   @unique @db.VarChar(64)
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   customer CUSTOMER?
   provider PROVIDER?
+  sessions Session[]
 
   @@map("users")
 }
@@ -23,7 +26,7 @@ model CUSTOMER {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user    USER     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   cart    CART?
   reviews REVIEW[]
   orders  ORDER[]
@@ -45,7 +48,19 @@ model PROVIDER {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  user USER @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("providers")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
 }

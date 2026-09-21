@@ -12,6 +12,8 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
+  console.error(error);
+
   const statusCode = error instanceof AppError ? error.statusCode : 500;
   const message =
     error instanceof AppError ? error.message : "Internal server error";

@@ -45,12 +45,20 @@ const getBearerToken = (request: Request): string | undefined => {
   return token;
 };
 
+const getCookieToken = (request: Request): string | undefined => {
+  const cookies = request.header("cookie")?.split(";") ?? [];
+  const authCookie = cookies.find((cookie) =>
+    cookie.trim().startsWith("auth_token="),
+  );
+  return authCookie?.split("=").slice(1).join("=").trim();
+};
+
 export const authenticateJWT = (
   request: Request,
   response: Response,
   next: NextFunction,
 ): void => {
-  const token = getBearerToken(request);
+  const token = getBearerToken(request) ?? getCookieToken(request);
 
   if (!token) {
     next(new AppError("Authentication required", 401));
@@ -80,3 +88,13 @@ export const authenticateJWT = (
     next(new AppError("Invalid or expired authentication token", 401));
   }
 };
+
+export const requireRole =
+  (...roles: string[]) =>
+  (request: Request, _response: Response, next: NextFunction): void => {
+    if (!request.user || !roles.includes(request.user.role)) {
+      next(new AppError("Forbidden", 403));
+      return;
+    }
+    next();
+  };
