@@ -2,10 +2,12 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import type { NextFunction, Request, Response } from "express";
 import { JWT_EXPIRES_IN, JWT_SECRET } from "../config/env.config";
 import { AppError } from "../utils/app-error";
+import { prisma } from "../config/prisma";
 
 export type AuthTokenPayload = {
   sub: string;
   role: string;
+  token?: string;
 };
 
 export type AuthenticatedRequest = Request & {
@@ -29,20 +31,16 @@ export const createAccessToken = (payload: AuthTokenPayload): string => {
   return jwt.sign(payload, JWT_SECRET, tokenOptions);
 };
 
-const getBearerToken = (request: Request): string | undefined => {
+export const getAuthToken = (request: Request): string | undefined => {
   const authorization = request.header("authorization");
 
-  if (!authorization) {
-    return undefined;
+  if (authorization) {
+    const [scheme, token] = authorization.split(" ");
+    if (scheme?.toLowerCase() === "bearer" && token && !token.includes(" ")) {
+      return token;
+    }
   }
-
-  const [scheme, token] = authorization.split(" ");
-
-  if (scheme?.toLowerCase() !== "bearer" || !token || token.includes(" ")) {
-    return undefined;
-  }
-
-  return token;
+  return getCookieToken(request);
 };
 
 const getCookieToken = (request: Request): string | undefined => {
@@ -58,7 +56,7 @@ export const authenticateJWT = (
   response: Response,
   next: NextFunction,
 ): void => {
-  const token = getBearerToken(request) ?? getCookieToken(request);
+  const token = getAuthToken(request);
 
   if (!token) {
     next(new AppError("Authentication required", 401));
@@ -79,11 +77,23 @@ export const authenticateJWT = (
       return;
     }
 
-    request.user = {
-      sub: decoded.sub,
-      role: decoded.role,
-    };
-    next();
+    prisma.session
+      .findUnique({ where: { token }, include: { user: true } })
+      .then((session) => {
+        if (
+          !session ||
+          session.user.id !== decoded.sub ||
+          session.user.isActive === false
+        ) {
+          next(new AppError("Session expired or revoked", 401));
+          return;
+        }
+        request.user = { sub: decoded.sub, role: decoded.role, token };
+        next();
+      })
+      .catch(() =>
+        next(new AppError("Authentication service unavailable", 503)),
+      );
   } catch {
     next(new AppError("Invalid or expired authentication token", 401));
   }

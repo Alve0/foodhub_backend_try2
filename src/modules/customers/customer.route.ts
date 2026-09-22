@@ -1,0 +1,20 @@
+import { Router } from "express";
+import { authenticateJWT, requireRole } from "../../middleware/jwt";
+import { customerController } from "./customer.controller";
+
+const route: Router = Router();
+route.use(authenticateJWT, requireRole("customer"));
+route.get("/profile", customerController.getProfile);
+route.patch("/profile", customerController.updateProfile);
+route.get("/cart", customerController.getCart);
+route.post("/cart/items", customerController.addItem);
+route.patch("/cart/items/:itemId", customerController.updateItem);
+route.delete("/cart/items/:itemId", customerController.removeItem);
+route.delete("/cart", customerController.clearCart);
+route.post("/checkout", customerController.checkout);
+route.get("/orders", customerController.getOrders);
+route.get("/orders/:id", customerController.getOrder);
+route.patch("/orders/:id/cancel", customerController.cancelOrder);
+route.post("/orders/:id/review", customerController.createReview);
+route.get("/reviews", customerController.listReviews);
+export const customerRoute: Router = route;

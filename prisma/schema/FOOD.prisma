@@ -6,6 +6,7 @@ model CATEGORY {
 
   foods FOOD[]
 
+  @@unique([name])
   @@map("category")
 }
 

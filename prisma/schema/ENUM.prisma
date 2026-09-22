@@ -3,3 +3,12 @@ enum ROLE {
   provider
   admin
 }
+
+enum ORDER_STATUS {
+  pending
+  accepted
+  preparing
+  ready
+  completed
+  cancelled
+}

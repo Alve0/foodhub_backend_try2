@@ -13,6 +13,10 @@ type AuthInput = {
   email?: unknown;
   password?: unknown;
   role?: unknown;
+  restaurantName?: unknown;
+  restaurantDescription?: unknown;
+  restaurantAddress?: unknown;
+  phone?: unknown;
 };
 type PasswordInput = { currentPassword?: unknown; newPassword?: unknown };
 
@@ -51,12 +55,56 @@ const createUser = async (input: AuthInput) => {
   if (await prisma.user.findUnique({ where: { email } }))
     throw new AppError("User already exists", 409);
 
+  const restaurantName =
+    typeof input.restaurantName === "string" ? input.restaurantName.trim() : "";
+  const restaurantDescription =
+    typeof input.restaurantDescription === "string"
+      ? input.restaurantDescription.trim()
+      : "";
+  const restaurantAddress =
+    typeof input.restaurantAddress === "string"
+      ? input.restaurantAddress.trim()
+      : "";
+  const phone = typeof input.phone === "string" ? input.phone.trim() : "";
+
+  if (role === "provider") {
+    if (
+      !restaurantName ||
+      !restaurantDescription ||
+      !restaurantAddress ||
+      !phone ||
+      restaurantName.length > 100 ||
+      restaurantDescription.length > 500 ||
+      phone.length > 20
+    )
+      throw new AppError(
+        "Complete provider restaurant details are required",
+        400,
+      );
+  }
+
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   const { createdUser, token } = await prisma.$transaction(
     async (transaction) => {
       const createdUser = await transaction.user.create({
         data: { name, email, password: passwordHash, role: role as ROLE },
       });
+      if (role === "customer") {
+        const customer = await transaction.cUSTOMER.create({
+          data: { userId: createdUser.id },
+        });
+        await transaction.cART.create({ data: { customerId: customer.id } });
+      } else {
+        await transaction.pROVIDER.create({
+          data: {
+            userId: createdUser.id,
+            restaurantName,
+            restaurantDescription,
+            restaurantAddress,
+            phone,
+          },
+        });
+      }
       const token = createAccessToken({
         sub: createdUser.id,
         role: createdUser.role,
@@ -83,6 +131,11 @@ const login = async (input: AuthInput) => {
   const token = createAccessToken({ sub: user.id, role: user.role });
   await prisma.session.create({ data: { userId: user.id, token } });
   return { user: publicUser(user), token };
+};
+
+const logout = async (token: string | undefined) => {
+  if (token) await prisma.session.deleteMany({ where: { token } });
+  return { message: "Logged out successfully" };
 };
 
 const changePassword = async (userId: string, input: PasswordInput) => {
@@ -238,6 +291,7 @@ const getAllCustomers = () =>
 export const authService = {
   createUser,
   login,
+  logout,
   changePassword,
   updateProfile,
   forgotPassword,

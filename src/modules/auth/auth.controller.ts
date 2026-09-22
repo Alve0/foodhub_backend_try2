@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { catchAsync } from "../../utils/catch-async";
 import { authService } from "./auth.service";
 import { sendResponse } from "../../utils/send-response";
+import { getAuthToken } from "../../middleware/jwt";
 
 const setAuthCookie = (res: Parameters<RequestHandler>[1], token: string) => {
   res.cookie("auth_token", token, {
@@ -27,6 +28,21 @@ const login: RequestHandler = catchAsync(async (req, res) => {
   const result = await authService.login(req.body);
   setAuthCookie(res, result.token);
   sendResponse(res, 200, "Login successful", result);
+});
+
+const logout: RequestHandler = catchAsync(async (req, res) => {
+  res.clearCookie("auth_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  sendResponse(
+    res,
+    200,
+    "Logged out successfully",
+    await authService.logout(getAuthToken(req)),
+  );
 });
 
 const changePassword: RequestHandler = catchAsync(async (req, res) => {
@@ -95,6 +111,7 @@ const getAllCustomers: RequestHandler = catchAsync(async (_req, res) => {
 export const authController: {
   createUser: RequestHandler;
   login: RequestHandler;
+  logout: RequestHandler;
   changePassword: RequestHandler;
   updateProfile: RequestHandler;
   forgotPassword: RequestHandler;
@@ -105,6 +122,7 @@ export const authController: {
 } = {
   createUser,
   login,
+  logout,
   changePassword,
   updateProfile,
   forgotPassword,

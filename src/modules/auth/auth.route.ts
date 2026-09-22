@@ -5,6 +5,7 @@ const route: Router = Router();
 
 route.post("/register", authController.createUser);
 route.post("/login", authController.login);
+route.post("/logout", authenticateJWT, authController.logout);
 route.post("/forgot-password", authController.forgotPassword);
 route.post("/reset-password", authController.resetPassword);
 route.patch("/profile", authenticateJWT, authController.updateProfile);
